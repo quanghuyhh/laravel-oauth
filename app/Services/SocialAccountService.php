@@ -1,9 +1,9 @@
 <?php
 
-namespace Bee\Socialite\Services;
+namespace App\Services;
 
+use App\Models\SocialAccount;
 use App\Models\User;
-use Bee\Socialite\Models\SocialAccount;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -52,8 +52,8 @@ class SocialAccountService
             [
                 'user_id' => $user->id,
                 'email' => $socialUser?->getEmail(),
-                'token' => $socialUser?->token,
-                'refreshToken' => $socialUser?->refreshToken,
+                'access_token' => $socialUser?->token,
+                'refresh_token' => $socialUser?->refreshToken,
                 'details' => (array) $socialUser,
             ]
         );

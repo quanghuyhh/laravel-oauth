@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\SocialDriveEnum;
 use App\Http\Controllers\Controller;
-use Bee\Socialite\Enums\SocialDriveEnum;
-use Bee\Socialite\Services\SocialAccountService;
+use App\Services\SocialAccountService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-use Inertia\Inertia;
 use Laravel\Socialite\Facades\Socialite;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -47,7 +46,7 @@ class SocialAuthController extends Controller
             Auth::login($user);
             Session::regenerate();
 
-            return Inertia::location(route('home'));
+            return redirect()->route('home');
         } catch (\Throwable $throwable) {
             DB::rollBack();
 
