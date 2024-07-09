@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
+use App\Enums\SocialDriveEnum;
 use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Contracts\User as SocialUser;
+use Laravel\Socialite\Facades\Socialite;
 
 class SocialAccountService
 {
@@ -57,5 +59,27 @@ class SocialAccountService
                 'details' => (array) $socialUser,
             ]
         );
+    }
+
+    public function fetchUserFromSocial(SocialAccount $socialAccount)
+    {
+        $providerSettings = config("services.{$socialAccount->provider}");
+        $scopes = explode(',', $providerSettings['scopes'] ?? '');
+        $socialite = match ($socialAccount->provider) {
+            SocialDriveEnum::GOOGLE->value => Socialite::driver($socialAccount->provider)->scopes($scopes)
+                ->with(["access_type" => "offline", "prompt" => "consent select_account"]),
+            default => Socialite::driver($socialAccount->provider)->scopes($scopes),
+        };
+        $token = $socialite->refreshToken($socialAccount->refresh_token);
+        return $this->transformProfileFromSocialAccount($socialite->userFromToken($token->token));
+    }
+
+    protected function transformProfileFromSocialAccount(SocialUser $socialUser)
+    {
+        return [
+            'email' => $socialUser->getEmail(),
+            'name' => $socialUser->getName(),
+            'avatar' => $socialUser->getAvatar(),
+        ];
     }
 }
