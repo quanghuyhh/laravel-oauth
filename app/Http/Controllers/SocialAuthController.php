@@ -3,13 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Enums\SocialDriveEnum;
-use App\Http\Controllers\Controller;
 use App\Services\SocialAccountService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-use Laravel\Socialite\Contracts\User as SocialUser;
 use Laravel\Socialite\Facades\Socialite;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +16,8 @@ class SocialAuthController extends Controller
 {
     public function __construct(
         public SocialAccountService $service,
-    ) {
+    )
+    {
     }
 
     public function handleRedirect(SocialDriveEnum $provider, Request $request): RedirectResponse|\Illuminate\Http\RedirectResponse
@@ -42,7 +41,7 @@ class SocialAuthController extends Controller
             $socialUser = Socialite::driver($provider->value)->user();
             throw_if(
                 empty($socialUser),
-                new \Exception(trans('Failed to authenticate with '.ucfirst($provider->value).'. Please try again!'))
+                new \Exception(trans('Failed to authenticate with ' . ucfirst($provider->value) . '. Please try again!'))
             );
 
             $user = $this->service->authWithSocialUser($socialUser, $provider->value);

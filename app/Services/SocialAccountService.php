@@ -15,7 +15,8 @@ class SocialAccountService
 {
     public function __construct(
         public SocialAccount $socialAccount,
-    ) {
+    )
+    {
     }
 
     public function authWithSocialUser(SocialUser $socialUser, string $provider)
@@ -56,7 +57,7 @@ class SocialAccountService
                 'email' => $socialUser?->getEmail(),
                 'access_token' => $socialUser?->token,
                 'refresh_token' => $socialUser?->refreshToken,
-                'details' => (array) $socialUser,
+                'details' => (array)$socialUser,
             ]
         );
     }
