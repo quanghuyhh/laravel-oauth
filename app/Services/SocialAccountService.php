@@ -7,6 +7,8 @@ use App\Models\SocialAccount;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Contracts\User as SocialUser;
 use Laravel\Socialite\Facades\Socialite;
@@ -62,7 +64,18 @@ class SocialAccountService
         );
     }
 
-    public function fetchUserFromSocial(SocialAccount $socialAccount)
+    public function getUserProfileSocialResult(User $user): string
+    {
+        $socialProfiles = [];
+        foreach ($user->socialAccounts as $account) {
+            $socialProfiles[$account->provider] = $this->fetchUserFromSocial($account);
+        }
+        return view('users.partials.social-account', [
+            'socialAccounts' => $socialProfiles,
+        ])->render();
+    }
+
+    public function fetchUserFromSocial(SocialAccount $socialAccount): array
     {
         $providerSettings = config("services.{$socialAccount->provider}");
         $scopes = explode(',', $providerSettings['scopes'] ?? '');
@@ -75,7 +88,29 @@ class SocialAccountService
         return $this->transformProfileFromSocialAccount($socialite->userFromToken($token->token));
     }
 
-    protected function transformProfileFromSocialAccount(SocialUser $socialUser)
+    /**
+     * @param SocialDriveEnum $provider
+     * @return mixed
+     */
+    public function getRedirectUrl(SocialDriveEnum $provider)
+    {
+        $providerSettings = config("services.{$provider->value}");
+        $scopes = explode(',', $providerSettings['scopes'] ?? '');
+        return match ($provider->value) {
+            SocialDriveEnum::GOOGLE->value => Socialite::driver($provider->value)->scopes($scopes)
+                ->with(["access_type" => "offline", "prompt" => "consent select_account"]),
+            default => Socialite::driver($provider->value)->scopes($scopes),
+        };
+    }
+
+    public function logout(Request $request): void
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+    }
+
+    protected function transformProfileFromSocialAccount(SocialUser $socialUser): array
     {
         return [
             'email' => $socialUser->getEmail(),
