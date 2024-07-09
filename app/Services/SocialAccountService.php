@@ -68,7 +68,11 @@ class SocialAccountService
     {
         $socialProfiles = [];
         foreach ($user->socialAccounts as $account) {
-            $socialProfiles[$account->provider] = $this->fetchUserFromSocial($account);
+            $socialProfile = $this->fetchUserFromSocial($account);
+            if (empty($socialProfile)) {
+                continue;
+            }
+            $socialProfiles[$account->provider] = $socialProfile;
         }
         return view('users.partials.social-account', [
             'socialAccounts' => $socialProfiles,
@@ -84,6 +88,9 @@ class SocialAccountService
                 ->with(["access_type" => "offline", "prompt" => "consent select_account"]),
             default => Socialite::driver($socialAccount->provider)->scopes($scopes),
         };
+        if (!$socialAccount->refresh_token) {
+            return [];
+        }
         $token = $socialite->refreshToken($socialAccount->refresh_token);
         return $this->transformProfileFromSocialAccount($socialite->userFromToken($token->token));
     }
